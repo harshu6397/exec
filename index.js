@@ -100,7 +100,45 @@ app.post("/execute_java_program", function (req, res) {
     });
   };
 
+  // Check whther the javac is installed or not
+  const check_javac = async () => {
+    return new Promise((resolve, reject) => {
+        exec("javac -version", async function (error, stdout, stderr) {
+            if (error) {
+              console.log("Rejection in check_javac")
+                exec("sudo apt install default-jdk", async function (error, stdout, stderr) {
+                    if (error) {
+                      console.log("check_javac")
+                        reject(error);
+                    }
+                    else{
+                        resolve(stdout);
+                    }
+                });
+            } else {
+                console.log("Resolved in check_javac")
+                resolve(stdout);
+            }
+        });
+    });
+    };
+
   const main_java = async () => {
+    try{
+        await check_javac();
+        console.log("Javac is installed");
+    }
+    catch(error){console.log("Javac is not installed");
+        exec("sudo apt install default-jdk", async function (error, stdout, stderr) {
+            if (error) {
+                console.log("Rejection")
+                reject(error);
+            } else {
+                console.log("Resolved")
+                resolve(stdout);
+            }
+        });
+    }
     await compile_java();
     const result = await run_java();
     fs.unlinkSync("code.java");
